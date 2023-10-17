@@ -32,6 +32,12 @@ function bayesian_score(vars, G, D)
     return sum(bayesian_score_component(M[i], α[i]) for i in 1:n)
 end
 
+struct Variable
+    name::Symbol
+    r::Int # number of possible values
+end
+    
+
 function sub2ind(siz, x)
     k = vcat(1, cumprod(siz[1:end-1]))
     return dot(k, x .- 1) + 1
@@ -97,13 +103,18 @@ function compute(infile, outfile)
     # THIS INCLUDES CHANGING THE FUNCTION NAMES, MAKING THE CODE MODULAR, BASICALLY ANYTHING
 
     data = CSV.File(infile) |> DataFrame
-    show(data)
+    # show(data)
     D = Matrix(values(data))
-    vars = names(data)
+    variable_names = names(data)
+    vars = []
+    for v in variable_names
+        var = Variable(Symbol(v), maximum(data[!, v]))
+    end
     ordering=1:length(vars)
     method = K2Search(ordering)
     G = fit(method, vars, D)
-    
+    println(G)
+
 
 end
 

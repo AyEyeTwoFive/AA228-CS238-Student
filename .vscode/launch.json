@@ -14,7 +14,7 @@
             "stopOnEntry": false,
             "cwd": "${workspaceFolder}",
             "juliaEnv": "${command:activeJuliaEnvironment}",
-            "args": ["project1/example/example.csv", "project1/example_out.gph"]
+            "args": ["project1/data/large.csv", "project1/large.gph"]
         }
     ]
 }

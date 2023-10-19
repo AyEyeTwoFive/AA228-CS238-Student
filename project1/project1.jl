@@ -2,6 +2,8 @@ using Graphs
 using Printf
 using CSV
 using DataFrames
+using SpecialFunctions
+using LinearAlgebra
 
 """
     write_gph(dag::DiGraph, idx2names, filename)
@@ -14,6 +16,13 @@ function write_gph(dag::DiGraph, idx2names, filename)
             @printf(io, "%s,%s\n", idx2names[src(edge)], idx2names[dst(edge)])
         end
     end
+end
+
+function prior(vars, G)
+    n = length(vars)
+    r = [vars[i].r for i in 1:n]
+    q = [prod([r[j] for j in inneighbors(G,i)]) for i in 1:n]
+    return [ones(q[i], r[i]) for i in 1:n]
 end
 
 function bayesian_score_component(M, α)
@@ -102,18 +111,33 @@ function compute(infile, outfile)
     # FEEL FREE TO CHANGE ANYTHING ANYWHERE IN THE CODE
     # THIS INCLUDES CHANGING THE FUNCTION NAMES, MAKING THE CODE MODULAR, BASICALLY ANYTHING
 
+    # read in data 
     data = CSV.File(infile) |> DataFrame
     # show(data)
-    D = Matrix(values(data))
+    D = Matrix(Matrix(values(data))')
+
+    # construct vars 
     variable_names = names(data)
     vars = []
     for v in variable_names
         var = Variable(Symbol(v), maximum(data[!, v]))
+        push!(vars, var)
     end
+
+    # do k2 search 
     ordering=1:length(vars)
     method = K2Search(ordering)
     G = fit(method, vars, D)
-    println(G)
+
+    # write out graph
+    idx2names = Dict((i, vars[i].name) for i in 1:length(vars))
+    write_gph(G, idx2names, outfile)
+
+    # Print out final Bayesian score
+    println("Final Bayesian Score: ", bayesian_score(vars,G,D))
+
+
+
 
 
 end

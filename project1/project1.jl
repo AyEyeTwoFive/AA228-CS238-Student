@@ -4,6 +4,11 @@ using CSV
 using DataFrames
 using SpecialFunctions
 using LinearAlgebra
+using Graphs  # for DiGraph and add_edge!
+using TikzGraphs   # for TikZ plot output
+using TikzPictures # to save TikZ as PDF
+using GraphPlot
+using Compose, Cairo
 
 """
     write_gph(dag::DiGraph, idx2names, filename)
@@ -110,7 +115,7 @@ function compute(infile, outfile)
     # WRITE YOUR CODE HERE
     # FEEL FREE TO CHANGE ANYTHING ANYWHERE IN THE CODE
     # THIS INCLUDES CHANGING THE FUNCTION NAMES, MAKING THE CODE MODULAR, BASICALLY ANYTHING
-
+    
     # read in data 
     data = CSV.File(infile) |> DataFrame
     # show(data)
@@ -132,14 +137,13 @@ function compute(infile, outfile)
     # write out graph
     idx2names = Dict((i, vars[i].name) for i in 1:length(vars))
     write_gph(G, idx2names, outfile)
+    # p = plot(G, variable_names) # create TikZ plot with labels
+    # save(PDF(outfile*".pdf"), p) # save TikZ as PDF
+    p = gplot(G; nodelabel=variable_names, layout=circular_layout)
+    draw(PNG(outfile*".png"),p)
 
     # Print out final Bayesian score
     println("Final Bayesian Score: ", bayesian_score(vars,G,D))
-
-
-
-
-
 end
 
 if length(ARGS) != 2
@@ -149,4 +153,6 @@ end
 inputfilename = ARGS[1]
 outputfilename = ARGS[2]
 
-compute(inputfilename, outputfilename)
+@time begin
+    compute(inputfilename, outputfilename)
+end
